@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mc.netivly.pl — Serwer Minecraft</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --grass: #5aad3b;
+    --grass-dark: #3d7a28;
+    --dirt: #8B5E3C;
+    --stone: #8a8a8a;
+    --night: #0a0d0a;
+    --night2: #0f140f;
+    --card-bg: #111811;
+    --border: #2a3d2a;
+    --accent: #5aad3b;
+    --accent2: #f9c23c;
+    --text: #e8f5e1;
+    --muted: #7a9a70;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--night);
+    color: var(--text);
+    font-family: 'Exo 2', sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* Pixel grid bg */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(90,173,59,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(90,173,59,0.03) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ========== NAV ========== */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 48px;
+    background: rgba(10,13,10,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 13px;
+    color: var(--accent);
+    text-shadow: 0 0 20px rgba(90,173,59,0.6);
+    letter-spacing: 1px;
+  }
+  .nav-logo span { color: var(--accent2); }
+
+  .nav-links { display: flex; gap: 32px; }
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: color .2s;
+  }
+  .nav-links a:hover { color: var(--accent); }
+
+  .nav-ip {
+    background: var(--border);
+    border: 1px solid var(--accent);
+    padding: 8px 18px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    color: var(--accent2);
+    cursor: pointer;
+    transition: background .2s, box-shadow .2s;
+    image-rendering: pixelated;
+  }
+  .nav-ip:hover {
+    background: rgba(90,173,59,0.15);
+    box-shadow: 0 0 20px rgba(90,173,59,0.3);
+  }
+
+  /* ========== HERO ========== */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    padding: 120px 24px 80px;
+    overflow: hidden;
+  }
+
+  /* Stars */
+  .stars {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 20% 20%, rgba(90,173,59,0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(249,194,60,0.05) 0%, transparent 50%);
+  }
+  .stars::after {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: radial-gradient(circle, rgba(255,255,255,0.7) 1px, transparent 1px);
+    background-size: 80px 80px;
+    background-position: 0 0, 40px 40px;
+    opacity: 0.08;
+  }
+
+  /* Floating cubes */
+  .cube {
+    position: absolute;
+    width: 32px; height: 32px;
+    border: 2px solid rgba(90,173,59,0.3);
+    background: rgba(90,173,59,0.05);
+    animation: floatCube linear infinite;
+    image-rendering: pixelated;
+  }
+  .cube:nth-child(1) { width:24px;height:24px; left:8%; top:20%; animation-duration:12s; animation-delay:0s; }
+  .cube:nth-child(2) { width:40px;height:40px; left:15%; top:60%; animation-duration:18s; animation-delay:-4s; opacity:.5; }
+  .cube:nth-child(3) { width:16px;height:16px; left:82%; top:15%; animation-duration:10s; animation-delay:-2s; }
+  .cube:nth-child(4) { width:48px;height:48px; left:88%; top:55%; animation-duration:22s; animation-delay:-8s; opacity:.4; border-color:rgba(249,194,60,0.3); }
+  .cube:nth-child(5) { width:20px;height:20px; left:50%; top:10%; animation-duration:15s; animation-delay:-6s; opacity:.6; }
+  .cube:nth-child(6) { width:28px;height:28px; left:35%; top:75%; animation-duration:20s; animation-delay:-10s; opacity:.3; }
+
+  @keyframes floatCube {
+    0%   { transform: translateY(0) rotate(0deg); }
+    50%  { transform: translateY(-40px) rotate(180deg); }
+    100% { transform: translateY(0) rotate(360deg); }
+  }
+
+  .hero-badge {
+    display: inline-block;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    color: var(--accent2);
+    background: rgba(249,194,60,0.1);
+    border: 1px solid rgba(249,194,60,0.4);
+    padding: 8px 16px;
+    margin-bottom: 32px;
+    letter-spacing: 2px;
+    animation: fadeInUp .8s ease both;
+  }
+
+  .hero h1 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(22px, 4.5vw, 52px);
+    line-height: 1.5;
+    margin-bottom: 16px;
+    animation: fadeInUp .8s ease .1s both;
+  }
+  .hero h1 .green { color: var(--accent); text-shadow: 0 0 30px rgba(90,173,59,0.5); }
+  .hero h1 .yellow { color: var(--accent2); }
+
+  .hero-subtitle {
+    font-size: clamp(14px, 2vw, 18px);
+    color: var(--muted);
+    max-width: 560px;
+    line-height: 1.8;
+    margin-bottom: 48px;
+    font-weight: 300;
+    animation: fadeInUp .8s ease .2s both;
+  }
+
+  .hero-btns {
+    display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
+    animation: fadeInUp .8s ease .3s both;
+  }
+
+  .btn-primary {
+    background: var(--grass);
+    color: #000;
+    padding: 16px 36px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+    text-decoration: none;
+    font-weight: 700;
+    letter-spacing: 1px;
+    transition: transform .15s, box-shadow .15s;
+    box-shadow: 0 4px 0 var(--grass-dark), 0 8px 30px rgba(90,173,59,0.3);
+    image-rendering: pixelated;
+  }
+  .btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 7px 0 var(--grass-dark), 0 12px 40px rgba(90,173,59,0.5);
+  }
+  .btn-primary:active { transform: translateY(1px); box-shadow: 0 2px 0 var(--grass-dark); }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--text);
+    padding: 16px 36px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+    text-decoration: none;
+    border: 2px solid var(--border);
+    letter-spacing: 1px;
+    transition: border-color .2s, color .2s, box-shadow .2s;
+  }
+  .btn-secondary:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 20px rgba(90,173,59,0.2);
+  }
+
+  .hero-ip-box {
+    margin-top: 56px;
+    display: flex; align-items: center; gap: 0;
+    animation: fadeInUp .8s ease .4s both;
+  }
+  .hero-ip-label {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    color: var(--muted);
+    padding: 14px 16px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-right: none;
+    letter-spacing: 1px;
+  }
+  .hero-ip-value {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    padding: 14px 24px;
+    background: rgba(90,173,59,0.08);
+    border: 1px solid var(--accent);
+    cursor: pointer;
+    transition: background .2s;
+    text-shadow: 0 0 15px rgba(90,173,59,0.5);
+  }
+  .hero-ip-value:hover { background: rgba(90,173,59,0.18); }
+  .copy-hint {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    color: var(--muted);
+    padding: 14px 12px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-left: none;
+  }
+
+  /* Grass ground */
+  .ground-strip {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 64px;
+    background: linear-gradient(to bottom, var(--grass-dark), #2a5018);
+    border-top: 4px solid var(--grass);
+  }
+  .ground-strip::before {
+    content: '';
+    position: absolute;
+    top: 4px; left: 0; right: 0; height: 8px;
+    background: repeating-linear-gradient(90deg, rgba(90,173,59,0.6) 0px, rgba(90,173,59,0.6) 32px, transparent 32px, transparent 64px);
+  }
+
+  /* ========== SECTION SHARED ========== */
+  section {
+    position: relative;
+    z-index: 1;
+    padding: 100px 24px;
+  }
+
+  .container { max-width: 1100px; margin: 0 auto; }
+
+  .section-tag {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(16px, 2.5vw, 28px);
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+
+  .section-desc {
+    color: var(--muted);
+    font-size: 16px;
+    line-height: 1.8;
+    max-width: 560px;
+    font-weight: 300;
+    margin-bottom: 64px;
+  }
+
+  /* ========== FEATURES ========== */
+  .features-section { background: var(--night2); }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2px;
+  }
+
+  .feature-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    padding: 40px 36px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color .3s, transform .3s;
+    cursor: default;
+  }
+  .feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform .3s;
+  }
+  .feature-card:hover { border-color: var(--accent); transform: translateY(-4px); }
+  .feature-card:hover::before { transform: scaleX(1); }
+
+  .feature-icon {
+    font-size: 32px;
+    margin-bottom: 20px;
+    display: block;
+    image-rendering: pixelated;
+  }
+
+  .feature-card h3 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+    color: var(--text);
+    margin-bottom: 14px;
+    line-height: 1.8;
+  }
+
+  .feature-card p {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.8;
+    font-weight: 300;
+  }
+
+  /* ========== INSTANCES ========== */
+  .instances-section {
+    background: var(--night);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .instances-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: center;
+  }
+
+  @media (max-width: 768px) {
+    .instances-layout { grid-template-columns: 1fr; gap: 40px; }
+  }
+
+  .instance-visual {
+    position: relative;
+  }
+
+  .server-rack {
+    background: #0a0a0a;
+    border: 2px solid var(--border);
+    padding: 24px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    color: var(--accent);
+    line-height: 2.2;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .server-rack::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(90,173,59,0.05) 0%, transparent 100%);
+    pointer-events: none;
+  }
+
+  .rack-line { display: flex; align-items: center; gap: 12px; }
+  .rack-dot {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    animation: blink 1.5s ease-in-out infinite;
+    flex-shrink: 0;
+    image-rendering: pixelated;
+  }
+  .rack-dot.yellow { background: var(--accent2); animation-delay: .3s; }
+  .rack-dot.off { background: #333; animation: none; }
+
+  @keyframes blink {
+    0%,100% { opacity: 1; }
+    50% { opacity: .2; }
+  }
+
+  .rack-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 12px 0;
+  }
+
+  .instance-plans {
+    display: flex; flex-direction: column; gap: 16px;
+    margin-top: 40px;
+  }
+
+  .plan-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    padding: 24px 28px;
+    display: flex; justify-content: space-between; align-items: center;
+    transition: border-color .2s, background .2s;
+    cursor: default;
+  }
+  .plan-card:hover { border-color: var(--accent); background: rgba(90,173,59,0.05); }
+  .plan-card.featured {
+    border-color: var(--accent2);
+    background: rgba(249,194,60,0.05);
+    position: relative;
+  }
+  .plan-card.featured::after {
+    content: 'POPULAR';
+    position: absolute; top: -1px; right: 20px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 6px;
+    background: var(--accent2);
+    color: #000;
+    padding: 4px 8px;
+  }
+
+  .plan-name {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .plan-specs {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 300;
+  }
+  .plan-price {
+    text-align: right;
+  }
+  .plan-price .amount {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 14px;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 4px;
+  }
+  .plan-price .period {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* ========== JOIN STEPS ========== */
+  .join-section { background: var(--night2); }
+
+  .steps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0;
+    border: 1px solid var(--border);
+    margin-top: 40px;
+  }
+
+  .step {
+    padding: 40px 32px;
+    border-right: 1px solid var(--border);
+    position: relative;
+    background: var(--card-bg);
+    transition: background .2s;
+  }
+  .step:last-child { border-right: none; }
+  .step:hover { background: rgba(90,173,59,0.04); }
+
+  .step-num {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 28px;
+    color: rgba(90,173,59,0.15);
+    margin-bottom: 20px;
+    display: block;
+  }
+
+  .step h4 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    color: var(--text);
+    margin-bottom: 12px;
+    line-height: 1.8;
+  }
+
+  .step p {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.8;
+    font-weight: 300;
+  }
+
+  .step code {
+    background: rgba(90,173,59,0.1);
+    border: 1px solid rgba(90,173,59,0.3);
+    color: var(--accent);
+    padding: 2px 8px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+  }
+
+  /* ========== CTA BANNER ========== */
+  .cta-section {
+    background: var(--night);
+    text-align: center;
+    padding: 100px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta-section::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center, rgba(90,173,59,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .cta-section h2 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(14px, 2.5vw, 26px);
+    line-height: 1.7;
+    margin-bottom: 24px;
+    position: relative;
+  }
+
+  .cta-section p {
+    color: var(--muted);
+    font-size: 16px;
+    margin-bottom: 48px;
+    font-weight: 300;
+    position: relative;
+  }
+
+  /* ========== FOOTER ========== */
+  footer {
+    background: #060806;
+    border-top: 1px solid var(--border);
+    padding: 40px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .footer-logo {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .footer-logo span { color: var(--accent); }
+
+  .footer-copy {
+    font-size: 12px;
+    color: #3a4a3a;
+    font-weight: 300;
+  }
+
+  .footer-links { display: flex; gap: 24px; }
+  .footer-links a {
+    color: #3a4a3a;
+    font-size: 12px;
+    text-decoration: none;
+    transition: color .2s;
+    font-weight: 300;
+  }
+  .footer-links a:hover { color: var(--muted); }
+
+  /* ========== COMING SOON BOX ========== */
+  .coming-soon-box {
+    margin-top: 52px;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    animation: fadeInUp .8s ease .4s both;
+  }
+  .cs-label {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    color: var(--muted);
+    letter-spacing: 3px;
+  }
+  .cs-value {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(12px, 2vw, 18px);
+    color: var(--accent);
+    text-shadow: 0 0 20px rgba(90,173,59,0.5);
+    padding: 14px 32px;
+    background: rgba(90,173,59,0.06);
+    border: 1px solid rgba(90,173,59,0.35);
+    letter-spacing: 2px;
+  }
+  .cs-status {
+    display: flex; align-items: center; gap: 10px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    color: var(--accent2);
+    letter-spacing: 2px;
+  }
+  .cs-dot {
+    width: 8px; height: 8px;
+    background: var(--accent2);
+    animation: blink 1.2s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+
+  /* ========== TOAST ========== */
+  .toast {
+    position: fixed;
+    bottom: 32px; left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--grass);
+    color: #000;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    padding: 14px 28px;
+    z-index: 999;
+    transition: transform .3s ease;
+    box-shadow: 0 4px 0 var(--grass-dark);
+    pointer-events: none;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  .mojang-bar {
+    background: #060806;
+    border-top: 1px solid #1a221a;
+    text-align: center;
+    padding: 14px 24px;
+    font-size: 11px;
+    color: #3a4a3a;
+    font-weight: 300;
+    letter-spacing: 0.3px;
+  }
+
+  /* ========== SCROLLBAR ========== */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--night); }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+  /* ========== ANIMATIONS ========== */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .fade-in {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity .6s ease, transform .6s ease;
+  }
+  .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+  /* ========== RESPONSIVE ========== */
+  @media (max-width: 768px) {
+    nav { padding: 16px 20px; }
+    .nav-links { display: none; }
+    footer { flex-direction: column; text-align: center; padding: 32px 20px; }
+    .steps-grid { grid-template-columns: 1fr; }
+    .step { border-right: none; border-bottom: 1px solid var(--border); }
+    .step:last-child { border-bottom: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">mc.<span>net</span>ivly.pl</div>
+  <div class="nav-links">
+    <a href="#features">Funkcje</a>
+    <a href="#instances">Instancje</a>
+    <a href="#join">Dołącz</a>
+  </div>
+  <div class="nav-ip">WKRÓTCE</div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="stars"></div>
+  <!-- floating cubes -->
+  <div class="cube"></div><div class="cube"></div><div class="cube"></div>
+  <div class="cube"></div><div class="cube"></div><div class="cube"></div>
+
+  <div class="hero-badge">🚧 W BUDOWIE — WKRÓTCE OTWARCIE</div>
+  <h1>Nadchodzi<br><span class="green">mc.netivly</span><span class="yellow">.pl</span></h1>
+  <p class="hero-subtitle">Serwer Minecraft dla wszystkich — graj na wspólnym świecie survival albo wynajmij własną instancję i buduj według swoich zasad. Trwają przygotowania — bądź gotowy!</p>
+  <div class="hero-btns">
+    <a href="#features" class="btn-primary">▶  CO BĘDZIE</a>
+    <a href="#instances" class="btn-secondary">INSTANCJE</a>
+  </div>
+
+  <div class="coming-soon-box">
+    <div class="cs-label">IP SERWERA</div>
+    <div class="cs-value">mc.netivly.pl</div>
+    <div class="cs-status">
+      <span class="cs-dot"></span>
+      SERWER W PRZYGOTOWANIU
+    </div>
+  </div>
+
+  <div class="ground-strip"></div>
+</section>
+
+<!-- FEATURES -->
+<section class="features-section" id="features">
+  <div class="container">
+    <div class="section-tag">// Co oferujemy</div>
+    <h2 class="section-title fade-in">Serwer gotowy<br>do gry.</h2>
+    <p class="section-desc fade-in">Wszystko czego potrzebujesz — od zwykłego survivalowego grania po własny, prywatny serwer.</p>
+
+    <div class="features-grid">
+      <div class="feature-card fade-in">
+        <span class="feature-icon">⛏</span>
+        <h3>Survival dla każdego</h3>
+        <p>Klasyczny tryb survival — zbieraj surowce, buduj bazy, walcz z mobami. Wanilia z minimalnym modpakiem dla stabilności.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <span class="feature-icon">🖥</span>
+        <h3>Własna instancja</h3>
+        <p>Chcesz rządzić? Wynajmij prywatny serwer MC w pełni pod Twoją kontrolą. Własne pluginy, własni gracze, własne zasady.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <span class="feature-icon">🛡</span>
+        <h3>Stabilność i ochrona</h3>
+        <p>Ochrona przed DDoS, automatyczne backupy co dobę, monitoring 24/7. Twój świat jest bezpieczny.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <span class="feature-icon">⚡</span>
+        <h3>Niski ping</h3>
+        <p>Serwery w Polsce — minimalne opóźnienia dla graczy z Polski i Europy Środkowej.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <span class="feature-icon">🔧</span>
+        <h3>Panel zarządzania</h3>
+        <p>Intuicyjny panel do zarządzania instancją — restarty, konsola, pliki, pluginy jednym kliknięciem.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <span class="feature-icon">💬</span>
+        <h3>Wsparcie po polsku</h3>
+        <p>Pomoc techniczna i administracja po polsku. Discord, ticket, czat — odpowiadamy szybko.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INSTANCES -->
+<section class="instances-section" id="instances">
+  <div class="container">
+    <div class="instances-layout">
+      <div>
+        <div class="section-tag">// Wynajem instancji</div>
+        <h2 class="section-title fade-in">Twój własny<br>serwer MC.</h2>
+        <p class="section-desc fade-in" style="margin-bottom:0;">Zapomnij o dzieleniu serwera z innymi. Otrzymujesz dedykowane zasoby, własny adres i pełną kontrolę — gotowe w kilka minut po zamówieniu.</p>
+
+        <div class="instance-plans">
+          <div class="plan-card fade-in">
+            <div>
+              <div class="plan-name">STARTER</div>
+              <div class="plan-specs">2 GB RAM • 2 vCPU • 10 GB SSD</div>
+            </div>
+            <div class="plan-price">
+              <span class="amount">19 zł</span>
+              <span class="period">/miesiąc</span>
+            </div>
+          </div>
+          <div class="plan-card featured fade-in">
+            <div>
+              <div class="plan-name">STANDARD</div>
+              <div class="plan-specs">4 GB RAM • 4 vCPU • 25 GB SSD</div>
+            </div>
+            <div class="plan-price">
+              <span class="amount">39 zł</span>
+              <span class="period">/miesiąc</span>
+            </div>
+          </div>
+          <div class="plan-card fade-in">
+            <div>
+              <div class="plan-name">PRO</div>
+              <div class="plan-specs">8 GB RAM • 6 vCPU • 50 GB SSD</div>
+            </div>
+            <div class="plan-price">
+              <span class="amount">69 zł</span>
+              <span class="period">/miesiąc</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="instance-visual fade-in">
+        <div class="server-rack">
+          <div class="rack-line"><div class="rack-dot"></div>INSTANCJA #1 — ONLINE</div>
+          <div class="rack-line"><div class="rack-dot yellow"></div>PLAYERS: 3/20</div>
+          <div class="rack-line"><div class="rack-dot"></div>RAM: 1.2 / 4.0 GB</div>
+          <div class="rack-divider"></div>
+          <div class="rack-line"><div class="rack-dot"></div>INSTANCJA #2 — ONLINE</div>
+          <div class="rack-line"><div class="rack-dot yellow"></div>PLAYERS: 8/20</div>
+          <div class="rack-line"><div class="rack-dot"></div>RAM: 2.8 / 4.0 GB</div>
+          <div class="rack-divider"></div>
+          <div class="rack-line"><div class="rack-dot off"></div>INSTANCJA #3 — IDLE</div>
+          <div class="rack-line"><div class="rack-dot off"></div>PLAYERS: 0/20</div>
+          <div class="rack-line"><div class="rack-dot off"></div>RAM: 0.1 / 4.0 GB</div>
+          <div class="rack-divider"></div>
+          <div class="rack-line"><div class="rack-dot"></div>NODE STATUS: HEALTHY</div>
+          <div class="rack-line"><div class="rack-dot"></div>UPTIME: 99.97%</div>
+          <div class="rack-line"><div class="rack-dot yellow"></div>PING: 4ms [PL]</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- JOIN -->
+<section class="join-section" id="join">
+  <div class="container">
+    <div class="section-tag">// Jak dołączyć</div>
+    <h2 class="section-title fade-in">Jak będzie<br>działać dołączanie?</h2>
+
+    <div class="steps-grid">
+      <div class="step fade-in">
+        <span class="step-num">01</span>
+        <h4>Uruchom Minecraft</h4>
+        <p>Potrzebujesz Java Edition w wersji 1.20+. Upewnij się że masz zainstalowaną oryginalną grę.</p>
+      </div>
+      <div class="step fade-in">
+        <span class="step-num">02</span>
+        <h4>Dodaj serwer</h4>
+        <p>Przejdź do <em>Multiplayer → Add Server</em> i wpisz adres:<br><br><code>mc.netivly.pl</code></p>
+      </div>
+      <div class="step fade-in">
+        <span class="step-num">03</span>
+        <h4>Dołącz i graj</h4>
+        <p>Kliknij Connect i gotowe! Nowych graczy wita spawn z podstawowym ekwipunkiem.</p>
+      </div>
+      <div class="step fade-in">
+        <span class="step-num">04</span>
+        <h4>Chcesz instancję?</h4>
+        <p>Napisz do nas na Discordzie lub przez formularz — instancja gotowa w kilka minut.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="container">
+    <h2 class="fade-in">Przygotuj kilof.<br><span style="color:var(--accent)">Wkrótce kopanie.</span></h2>
+    <p class="fade-in">Serwer jest w budowie. Zostań poinformowany jako pierwszy!</p>
+    <div class="hero-btns fade-in" style="justify-content:center;">
+      <a href="#features" class="btn-primary">▶  CO NAS CZEKA</a>
+      <a href="#instances" class="btn-secondary">INSTANCJE</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">mc.<span>netivly</span>.pl</div>
+  <div class="footer-copy">© 2025 Netivly. Wszelkie prawa zastrzeżone.</div>
+  <div class="footer-links">
+    <a href="#">Regulamin</a>
+    <a href="#">Prywatność</a>
+    <a href="#">Discord</a>
+    <a href="#">Kontakt</a>
+  </div>
+</footer>
+<div class="mojang-bar">
+  Netivly nie jest powiązane, sponsorowane ani zatwierdzone przez firmę Mojang Studios. Minecraft jest znakiem towarowym Mojang Studios.
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">IP skopiowane! ✔</div>
+
+<script>
+  // Copy IP
+  function copyIP() {
+    navigator.clipboard.writeText('mc.netivly.pl').then(() => {
+      const t = document.getElementById('toast');
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2200);
+    });
+  }
+
+  // Scroll animations
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), i * 80);
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12 });
+
+  document.querySelectorAll('.fade-in').forEach(el => obs.observe(el));
+</script>
+</body>
+</html>
