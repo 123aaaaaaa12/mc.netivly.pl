@@ -429,7 +429,7 @@
     padding: 24px 28px;
     display: flex; justify-content: space-between; align-items: center;
     transition: border-color .2s, background .2s;
-    cursor: default;
+    cursor: pointer;
   }
   .plan-card:hover { border-color: var(--accent); background: rgba(90,173,59,0.05); }
   .plan-card.featured {
@@ -467,6 +467,154 @@
     color: var(--accent);
     display: block;
     margin-bottom: 4px;
+  }
+
+  /* ========== MODAL ========== */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 200;
+    align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--card-bg);
+    border: 1px solid var(--accent);
+    max-width: 500px; width: 100%;
+    padding: 40px;
+    position: relative;
+    animation: fadeInUp .3s ease;
+  }
+  .modal-close {
+    position: absolute; top: 16px; right: 20px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    cursor: pointer;
+    background: none; border: none;
+    transition: color .2s;
+  }
+  .modal-close:hover { color: var(--text); }
+  .modal-tag {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+  }
+  .modal h3 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 14px;
+    color: var(--text);
+    margin-bottom: 8px;
+    line-height: 1.6;
+  }
+  .modal-price-row {
+    display: flex; align-items: baseline; gap: 8px;
+    margin: 20px 0;
+  }
+  .modal-price-row .big {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 22px;
+    color: var(--accent);
+  }
+  .modal-price-row .per {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 300;
+  }
+  .modal-features {
+    list-style: none;
+    margin: 0 0 28px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .modal-features li {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 300;
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+  .modal-features li::before {
+    content: '▸';
+    color: var(--accent);
+    flex-shrink: 0;
+    font-size: 11px;
+    margin-top: 1px;
+  }
+  .modal-cta {
+    display: block;
+    width: 100%;
+    background: var(--grass);
+    color: #000;
+    padding: 14px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    text-align: center;
+    text-decoration: none;
+    box-shadow: 0 4px 0 var(--grass-dark);
+    transition: transform .15s, box-shadow .15s;
+    border: none; cursor: pointer;
+  }
+  .modal-cta:hover { transform: translateY(-2px); box-shadow: 0 6px 0 var(--grass-dark); }
+
+  /* ========== SUBPAGE ========== */
+  .subpage {
+    display: none;
+    position: fixed; inset: 0;
+    background: var(--night);
+    z-index: 300;
+    overflow-y: auto;
+    padding: 80px 24px 60px;
+  }
+  .subpage.open { display: block; }
+  .subpage-inner { max-width: 700px; margin: 0 auto; }
+  .subpage-back {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    color: var(--muted);
+    cursor: pointer;
+    background: none; border: none;
+    margin-bottom: 40px;
+    display: flex; align-items: center; gap: 10px;
+    transition: color .2s;
+  }
+  .subpage-back:hover { color: var(--accent); }
+  .subpage h1 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(14px, 2.5vw, 22px);
+    line-height: 1.6;
+    margin-bottom: 32px;
+    color: var(--text);
+  }
+  .subpage p {
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.9;
+    font-weight: 300;
+    margin-bottom: 20px;
+  }
+  .subpage h2 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    margin: 36px 0 16px;
+    line-height: 1.8;
+  }
+  .subpage a { color: var(--accent); }
+  .subpage .contact-box {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    padding: 28px 32px;
+    margin-top: 24px;
+  }
+  .subpage .contact-box p { margin: 0; }
+  .subpage .contact-box a {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    text-decoration: none;
   }
   .plan-price .period {
     font-size: 11px;
@@ -779,34 +927,34 @@
         <p class="section-desc fade-in" style="margin-bottom:0;">Wynajmij prywatną instancję Igrzysk — zaproś znajomych, ustaw zasady i graj kiedy chcesz. Instancja gotowa w kilka minut. W przyszłości dostępne będą też inne minigry.</p>
 
         <div class="instance-plans">
-          <div class="plan-card fade-in">
+          <div class="plan-card fade-in" onclick="openModal('starter')">
             <div>
               <div class="plan-name">STARTER</div>
-              <div class="plan-specs">2 GB RAM • 2 vCPU • 10 GB SSD</div>
+              <div class="plan-specs">Do 10 graczy • Igrzyska • Miesięcznie</div>
             </div>
             <div class="plan-price">
               <span class="amount">19 zł</span>
-              <span class="period">/miesiąc</span>
+              <span class="period">/mies.</span>
             </div>
           </div>
-          <div class="plan-card featured fade-in">
+          <div class="plan-card featured fade-in" onclick="openModal('standard')">
             <div>
               <div class="plan-name">STANDARD</div>
-              <div class="plan-specs">4 GB RAM • 4 vCPU • 25 GB SSD</div>
+              <div class="plan-specs">Do 20 graczy • Igrzyska • Miesięcznie</div>
             </div>
             <div class="plan-price">
               <span class="amount">39 zł</span>
-              <span class="period">/miesiąc</span>
+              <span class="period">/mies.</span>
             </div>
           </div>
-          <div class="plan-card fade-in">
+          <div class="plan-card fade-in" onclick="openModal('pro')">
             <div>
               <div class="plan-name">PRO</div>
-              <div class="plan-specs">8 GB RAM • 6 vCPU • 50 GB SSD</div>
+              <div class="plan-specs">Do 50 graczy • Igrzyska • Miesięcznie</div>
             </div>
             <div class="plan-price">
               <span class="amount">69 zł</span>
-              <span class="period">/miesiąc</span>
+              <span class="period">/mies.</span>
             </div>
           </div>
         </div>
@@ -881,23 +1029,84 @@
 <!-- FOOTER -->
 <footer>
   <div class="footer-logo">mc.<span>netivly</span>.pl</div>
-  <div class="footer-copy">© 2025 Netivly. Wszelkie prawa zastrzeżone.</div>
+  <div class="footer-copy">© 2026 Netivly. Wszelkie prawa zastrzeżone.</div>
   <div class="footer-links">
-    <a href="#">Regulamin</a>
-    <a href="#">Prywatność</a>
-    <a href="#">Discord</a>
-    <a href="#">Kontakt</a>
+    <a href="#" onclick="openSubpage('regulamin');return false;">Regulamin</a>
+    <a href="#" onclick="openSubpage('prywatnosc');return false;">Prywatność</a>
+    <a href="#" onclick="openSubpage('discord');return false;">Discord</a>
+    <a href="#" onclick="openSubpage('kontakt');return false;">Kontakt</a>
   </div>
 </footer>
 <div class="mojang-bar">
   Netivly nie jest powiązane, sponsorowane ani zatwierdzone przez firmę Mojang Studios. Minecraft jest znakiem towarowym Mojang Studios.
 </div>
 
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal-box">
+    <button class="modal-close" onclick="closeModalDirect()">✕ ZAMKNIJ</button>
+    <div class="modal-tag" id="modal-tag">// INSTANCJA</div>
+    <h3 id="modal-title">STARTER</h3>
+    <div class="modal-price-row">
+      <span class="big" id="modal-price">19 zł</span>
+      <span class="per">/ miesiąc</span>
+    </div>
+    <ul class="modal-features" id="modal-features"></ul>
+    <a href="mailto:kontakt@netivly.pl" class="modal-cta" id="modal-cta">▶ ZAPYTAJ O INSTANCJĘ</a>
+  </div>
+</div>
+
+<!-- SUBPAGES -->
+<div class="subpage" id="sub-regulamin">
+  <div class="subpage-inner">
+    <button class="subpage-back" onclick="closeSubpage('regulamin')">◀ WRÓĆ</button>
+    <h1>Regulamin</h1>
+    <p>Regulamin serwisu mc.netivly.pl jest w trakcie przygotowania i zostanie opublikowany przed oficjalnym otwarciem serwera.</p>
+    <h2>Zasady ogólne</h2>
+    <p>Korzystanie z serwera mc.netivly.pl oznacza akceptację obowiązujących zasad. Administracja zastrzega sobie prawo do zmiany regulaminu w dowolnym momencie.</p>
+    <h2>Kontakt</h2>
+    <p>W sprawach regulaminowych skontaktuj się z nami pod adresem: <a href="mailto:kontakt@netivly.pl">kontakt@netivly.pl</a></p>
+  </div>
+</div>
+
+<div class="subpage" id="sub-prywatnosc">
+  <div class="subpage-inner">
+    <button class="subpage-back" onclick="closeSubpage('prywatnosc')">◀ WRÓĆ</button>
+    <h1>Polityka prywatności</h1>
+    <p>Polityka prywatności serwisu mc.netivly.pl jest w trakcie przygotowania i zostanie opublikowana przed oficjalnym otwarciem serwera.</p>
+    <h2>Dane osobowe</h2>
+    <p>Netivly przetwarza dane osobowe zgodnie z obowiązującym prawem, w szczególności z Rozporządzeniem RODO. Dane nie są udostępniane podmiotom trzecim bez zgody użytkownika.</p>
+    <h2>Kontakt</h2>
+    <p>W sprawach dotyczących prywatności skontaktuj się z nami: <a href="mailto:kontakt@netivly.pl">kontakt@netivly.pl</a></p>
+  </div>
+</div>
+
+<div class="subpage" id="sub-discord">
+  <div class="subpage-inner">
+    <button class="subpage-back" onclick="closeSubpage('discord')">◀ WRÓĆ</button>
+    <h1>Discord</h1>
+    <p>Serwer Discord Netivly jest w przygotowaniu. Dołącz jako jeden z pierwszych i bądź na bieżąco z rozwojem serwera.</p>
+    <p>Link do Discorda zostanie opublikowany wkrótce. Śledź nas!</p>
+  </div>
+</div>
+
+<div class="subpage" id="sub-kontakt">
+  <div class="subpage-inner">
+    <button class="subpage-back" onclick="closeSubpage('kontakt')">◀ WRÓĆ</button>
+    <h1>Kontakt</h1>
+    <p>Masz pytania dotyczące serwera, wynajmu instancji lub współpracy dla twórców? Napisz do nas — odpowiadamy szybko.</p>
+    <div class="contact-box">
+      <p>E-mail: <a href="mailto:kontakt@netivly.pl">kontakt@netivly.pl</a></p>
+    </div>
+    <h2>Współpraca dla twórców</h2>
+    <p>Jesteś twórcą internetowym i chcesz wykorzystać instancję Igrzysk do swoich materiałów? Napisz na <a href="mailto:kontakt@netivly.pl">kontakt@netivly.pl</a> — chętnie porozmawiamy o współpracy.</p>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast">IP skopiowane! ✔</div>
 
 <script>
-  // Copy IP
   function copyIP() {
     navigator.clipboard.writeText('mc.netivly.pl').then(() => {
       const t = document.getElementById('toast');
@@ -906,7 +1115,76 @@
     });
   }
 
-  // Scroll animations
+  const plans = {
+    starter: {
+      title: 'STARTER',
+      price: '19 zł',
+      features: [
+        'Do 10 graczy jednocześnie',
+        'Dostęp do trybu Igrzysk',
+        'Prywatna instancja tylko dla Ciebie',
+        'Start instancji na żądanie',
+        'Wsparcie techniczne po polsku',
+        'Subskrypcja miesięczna — anuluj kiedy chcesz',
+      ]
+    },
+    standard: {
+      title: 'STANDARD',
+      price: '39 zł',
+      features: [
+        'Do 20 graczy jednocześnie',
+        'Dostęp do trybu Igrzysk',
+        'Prywatna instancja tylko dla Ciebie',
+        'Start instancji na żądanie',
+        'Priorytetowe wsparcie techniczne',
+        'Subskrypcja miesięczna — anuluj kiedy chcesz',
+        'Idealna dla twórców internetowych',
+      ]
+    },
+    pro: {
+      title: 'PRO',
+      price: '69 zł',
+      features: [
+        'Do 50 graczy jednocześnie',
+        'Dostęp do trybu Igrzysk',
+        'Prywatna instancja tylko dla Ciebie',
+        'Start instancji na żądanie',
+        'Priorytetowe wsparcie techniczne 24/7',
+        'Subskrypcja miesięczna — anuluj kiedy chcesz',
+        'Dla dużych eventów i twórców z większą widownią',
+      ]
+    }
+  };
+
+  function openModal(plan) {
+    const p = plans[plan];
+    document.getElementById('modal-title').textContent = p.title;
+    document.getElementById('modal-price').textContent = p.price;
+    document.getElementById('modal-features').innerHTML = p.features.map(f => `<li>${f}</li>`).join('');
+    document.getElementById('modal-overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal(e) {
+    if (e.target === document.getElementById('modal-overlay')) closeModalDirect();
+  }
+
+  function closeModalDirect() {
+    document.getElementById('modal-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function openSubpage(id) {
+    document.getElementById('sub-' + id).classList.add('open');
+    document.body.style.overflow = 'hidden';
+    window.scrollTo(0,0);
+  }
+
+  function closeSubpage(id) {
+    document.getElementById('sub-' + id).classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
   const obs = new IntersectionObserver((entries) => {
     entries.forEach((e, i) => {
       if (e.isIntersecting) {
